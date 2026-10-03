@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="navy_primary">#1B3A87</color>
+    <color name="navy_primary_dark">#122A66</color>
+    <color name="accent_red">#D32F2F</color>
+    <color name="accent_red_light">#FDEAEA</color>
+    <color name="surface_white">#FFFFFF</color>
+    <color name="background_grey">#F2F3F7</color>
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="chip_selected">#1B3A87</color>
+    <color name="chip_unselected">#FFFFFF</color>
+    <color name="chip_border">#D8DCE5</color>
+    <color name="divider">#E5E7EB</color>
+    <color name="ic_launcher_background">#1B3A87</color>
+    <color name="success_green">#2E7D32</color>
+    <color name="pending_orange">#F57C00</color>
+    <color name="white">#FFFFFF</color>
+</resources>

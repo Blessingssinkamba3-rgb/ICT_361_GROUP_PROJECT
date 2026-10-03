@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mulungushi Registrar</string>
+
+    <!-- Login -->
+    <string name="login_title">Mulungushi Registrar</string>
+    <string name="login_subtitle">Sign in to continue to ICT361</string>
+    <string name="login_key_label">Student number or staff email</string>
+    <string name="login_key_hint">e.g. 202301045</string>
+    <string name="password_label">Password</string>
+    <string name="password_hint">Enter your password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="sign_in">Sign in</string>
+    <string name="register_prompt">New here? Register with claim code</string>
+    <string name="signing_in">Signing in…</string>
+    <string name="login_error_generic">Incorrect student number/email or password.</string>
+    <string name="login_error_network">Can\'t reach the server. Check your connection and try again.</string>
+
+    <!-- Lecturer Home -->
+    <string name="home_title">Home</string>
+    <string name="signed_in_as_lecturer">Signed in as lecturer</string>
+    <string name="stat_students">Students</string>
+    <string name="stat_group_full">Group full</string>
+    <string name="stat_pending">Pending</string>
+    <string name="stat_conflicts">Conflicts</string>
+    <string name="group_occupancy">Group occupancy</string>
+    <string name="quick_actions">Quick actions</string>
+    <string name="needs_attention_title">Needs attention</string>
+    <string name="student_roster_title">Student roster</string>
+    <string name="student_roster_subtitle">Search, filter, edit or remove records</string>
+    <string name="add_student_title">Add a student</string>
+    <string name="add_student_subtitle">Manual entry, assign a group</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_roster">Roster</string>
+    <string name="nav_sync">Sync</string>
+    <string name="nav_my_group">My group</string>
+
+    <!-- Roster -->
+    <string name="search_hint">Search name or student number</string>
+    <string name="filter_all_programmes">All programmes</string>
+    <string name="filter_all_groups">All groups</string>
+    <string name="records_count_format">%1$d records</string>
+    <string name="empty_roster">No students match your search.</string>
+    <string name="error_loading_roster">Couldn\'t load the roster. Pull down to retry.</string>
+
+    <!-- Add student dialog -->
+    <string name="full_name_label">Full name</string>
+    <string name="full_name_hint">e.g. Mutinta Banda</string>
+    <string name="student_number_label">Student number</string>
+    <string name="student_number_hint">9 digits</string>
+    <string name="programme_label">Programme</string>
+    <string name="lab_group_label">Lab group</string>
+    <string name="lab_group_help">Full groups are shown but disabled for selection.</string>
+    <string name="cancel">Cancel</string>
+    <string name="add_student_action">Add student</string>
+    <string name="error_required">Required</string>
+    <string name="error_student_number_format">Must be exactly 9 digits</string>
+    <string name="error_duplicate_student_number">That student number is already registered</string>
+    <string name="error_group_full">This group is full — choose another group</string>
+
+    <!-- Student Home -->
+    <string name="welcome_back_format">Welcome back, %1$s</string>
+    <string name="my_profile_group">My profile &amp; group</string>
+    <string name="sync_status">Sync status</string>
+    <string name="request_group_change">Request group change</string>
+    <string name="edit_my_details">Edit my details</string>
+
+    <!-- Generic -->
+    <string name="sign_out">Sign out</string>
+    <string name="loading">Loading…</string>
+</resources>
