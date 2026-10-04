@@ -7,7 +7,40 @@ public class ApiErrorBody {
     @SerializedName("message") private String message;
     @SerializedName("details") private Object details;
 
-    public String getCode() { return code; }
-    public String getMessage() { return message; }
-    public Object getDetails() { return details; }
+    public ApiErrorBody() {}
+
+    public ApiErrorBody(String code, String message) {
+        this.code = code;
+        this.message = message;
+    }
+
+    public ApiErrorBody(String code, String message, Object details) {
+        this.code = code;
+        this.message = message;
+        this.details = details;
+    }
+
+    public String getCode() {
+        return code != null ? code : "UNKNOWN";
+    }
+
+    public String getMessage() {
+        return (message != null && !message.trim().isEmpty()) ? message : "An error occurred";
+    }
+
+    public Object getDetails() {
+        return details;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setDetails(Object details) {
+        this.details = details;
+    }
 }
