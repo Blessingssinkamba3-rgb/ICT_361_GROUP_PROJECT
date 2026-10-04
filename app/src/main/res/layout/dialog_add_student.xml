@@ -40,7 +40,8 @@
                 android:id="@+id/editFullName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/full_name_hint"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
                 android:inputType="textPersonName|textCapWords"
                 android:maxLength="100" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -58,7 +59,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:digits="0123456789"
-                android:hint="@string/student_number_hint"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
                 android:inputType="number"
                 android:maxLength="9" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -143,28 +145,31 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checkable="true"
-                    tools:text="G01 · 2/15" />
+                    android:text="G01" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipChooseG02"
                     style="@style/Widget.MaterialComponents.Chip.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checkable="true" />
+                    android:checkable="true"
+                    android:text="G02" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipChooseG03"
                     style="@style/Widget.MaterialComponents.Chip.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checkable="true" />
+                    android:checkable="true"
+                    android:text="G03" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipChooseG04"
                     style="@style/Widget.MaterialComponents.Chip.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checkable="true" />
+                    android:checkable="true"
+                    android:text="G04" />
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
 

@@ -4,15 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,224 +15,176 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.student_registration.adapter.StudentAdapter;
-import com.example.student_registration.model.ApiErrorBody;
-import com.example.student_registration.model.Student;
+import com.example.student_registration.model.GroupOccupancy;
 import com.example.student_registration.repository.AuthRepository;
-import com.example.student_registration.repository.StudentRepository;
 import com.example.student_registration.viewmodel.RosterViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.textfield.TextInputEditText;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class StudentRosterActivity extends AppCompatActivity {
 
     private RosterViewModel viewModel;
-    private AuthRepository authRepository;
-    private StudentRepository studentRepository;
     private StudentAdapter adapter;
 
     private TextView textRecordsCount;
-    private ImageButton buttonSignOut;
-    private EditText editSearch;
+    private RecyclerView recyclerStudents;
+    private SwipeRefreshLayout swipeRefreshRoster;
+    private View progressRoster;
+    private TextView textRosterEmpty;
+    private TextView textRosterError;
     private ChipGroup chipGroupProgramme;
     private ChipGroup chipGroupLabGroup;
 
-    private SwipeRefreshLayout swipeRefreshRoster;
-    private RecyclerView recyclerStudents;
-    private ProgressBar progressRoster;
-    private TextView textRosterEmpty;
-    private TextView textRosterError;
-    private FloatingActionButton fabAddStudent;
-    private BottomNavigationView bottomNavigation;
+    private Set<String> fullGroupCodes = new HashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_student_roster);
 
-        authRepository = new AuthRepository(this);
-        studentRepository = new StudentRepository(this);
-        viewModel = new ViewModelProvider(this).get(RosterViewModel.class);
-
         textRecordsCount = findViewById(R.id.textRecordsCount);
-        buttonSignOut = findViewById(R.id.buttonSignOut);
-        editSearch = findViewById(R.id.editSearch);
-        chipGroupProgramme = findViewById(R.id.chipGroupProgramme);
-        chipGroupLabGroup = findViewById(R.id.chipGroupLabGroup);
-
-        swipeRefreshRoster = findViewById(R.id.swipeRefreshRoster);
         recyclerStudents = findViewById(R.id.recyclerStudents);
+        swipeRefreshRoster = findViewById(R.id.swipeRefreshRoster);
         progressRoster = findViewById(R.id.progressRoster);
         textRosterEmpty = findViewById(R.id.textRosterEmpty);
         textRosterError = findViewById(R.id.textRosterError);
-        fabAddStudent = findViewById(R.id.fabAddStudent);
-        bottomNavigation = findViewById(R.id.bottomNavigation);
+        chipGroupProgramme = findViewById(R.id.chipGroupProgramme);
+        chipGroupLabGroup = findViewById(R.id.chipGroupLabGroup);
 
-        adapter = new StudentAdapter(student -> {
-            Toast.makeText(this, student.getFullName() + " (" + student.getStudentNumber() + ")", Toast.LENGTH_SHORT).show();
-        });
+        findViewById(R.id.buttonSignOut).setOnClickListener(v -> signOut());
 
         recyclerStudents.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new StudentAdapter(student -> {
+            // Student editor is a later build slice.
+        });
         recyclerStudents.setAdapter(adapter);
 
-        buttonSignOut.setOnClickListener(v -> {
-            authRepository.logout();
-            Intent intent = new Intent(StudentRosterActivity.this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        });
+        viewModel = new ViewModelProvider(this).get(RosterViewModel.class);
 
-        swipeRefreshRoster.setOnRefreshListener(() -> viewModel.refresh());
-
+        EditText editSearch = findViewById(R.id.editSearch);
         editSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                viewModel.onSearchTextChanged(s != null ? s.toString() : "");
+                viewModel.onSearchTextChanged(s.toString());
             }
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        chipGroupProgramme.setOnCheckedChangeListener((group, checkedId) -> {
-            String prog = null;
-            if (checkedId == R.id.chipCs) prog = "CS";
-            else if (checkedId == R.id.chipIt) prog = "IT";
-            else if (checkedId == R.id.chipDs) prog = "DS";
-            viewModel.onProgrammeFilterChanged(prog);
+        chipGroupProgramme.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            int id = checkedIds.isEmpty() ? R.id.chipAllProgrammes : checkedIds.get(0);
+            viewModel.onProgrammeFilterChanged(programmeForChip(id));
         });
 
-        chipGroupLabGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            String labGroup = null;
-            if (checkedId == R.id.chipG01) labGroup = "G01";
-            else if (checkedId == R.id.chipG02) labGroup = "G02";
-            else if (checkedId == R.id.chipG03) labGroup = "G03";
-            else if (checkedId == R.id.chipG04) labGroup = "G04";
-            viewModel.onGroupFilterChanged(labGroup);
+        chipGroupLabGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            int id = checkedIds.isEmpty() ? R.id.chipAllGroups : checkedIds.get(0);
+            viewModel.onGroupFilterChanged(groupForChip(id));
         });
 
-        fabAddStudent.setOnClickListener(v -> showAddStudentDialog());
-
-        bottomNavigation.setSelectedItemId(R.id.navRoster);
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.navHome) {
-                startActivity(new Intent(StudentRosterActivity.this, LecturerHomeActivity.class));
-                finish();
-                return true;
-            } else if (itemId == R.id.navSync) {
-                Toast.makeText(StudentRosterActivity.this, "Sync status is up to date", Toast.LENGTH_SHORT).show();
-                return true;
-            }
-            return itemId == R.id.navRoster;
+        swipeRefreshRoster.setOnRefreshListener(() -> {
+            viewModel.refresh();
+            viewModel.loadGroupChipCounts();
         });
 
-        viewModel.getUiState().observe(this, state -> {
-            if (state == null) return;
+        FloatingActionButton fabAddStudent = findViewById(R.id.fabAddStudent);
+        fabAddStudent.setOnClickListener(v -> openAddStudentDialog());
 
-            swipeRefreshRoster.setRefreshing(state.loading);
-            progressRoster.setVisibility(state.loading && (state.students == null || state.students.isEmpty()) ? View.VISIBLE : View.GONE);
-
-            if (state.errorMessage != null) {
-                textRosterError.setText(state.errorMessage);
-                textRosterError.setVisibility(View.VISIBLE);
-                textRosterEmpty.setVisibility(View.GONE);
-                recyclerStudents.setVisibility(View.GONE);
-            } else if (state.students != null) {
-                textRosterError.setVisibility(View.GONE);
-                adapter.submitList(state.students);
-                textRecordsCount.setText(state.total + " records");
-
-                if (state.students.isEmpty() && !state.loading) {
-                    textRosterEmpty.setVisibility(View.VISIBLE);
-                    recyclerStudents.setVisibility(View.GONE);
-                } else {
-                    textRosterEmpty.setVisibility(View.GONE);
-                    recyclerStudents.setVisibility(View.VISIBLE);
-                }
-            }
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNavigation);
+        bottomNav.setSelectedItemId(R.id.navRoster);
+        bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.navRoster) return true;
+            if (id == R.id.navHome) { finish(); return true; }
+            return false;
         });
+
+        viewModel.getUiState().observe(this, this::render);
+        viewModel.getGroupOccupancy().observe(this, this::renderGroupChips);
 
         viewModel.refresh();
+        viewModel.loadGroupChipCounts();
     }
 
-    private void showAddStudentDialog() {
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_student, null);
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .create();
+    private void render(RosterViewModel.RosterUiState state) {
+        swipeRefreshRoster.setRefreshing(false);
+        progressRoster.setVisibility(state.loading && state.students == null ? View.VISIBLE : View.GONE);
 
-        TextInputEditText editName = dialogView.findViewById(R.id.editFullName);
-        TextInputEditText editNumber = dialogView.findViewById(R.id.editStudentNumber);
-        ChipGroup chipProgrammeChoice = dialogView.findViewById(R.id.chipGroupProgrammeChoice);
-        ChipGroup chipGroupChoice = dialogView.findViewById(R.id.chipGroupLabGroupChoice);
-        TextView textError = dialogView.findViewById(R.id.textAddStudentError);
-        ProgressBar progress = dialogView.findViewById(R.id.progressAddStudent);
-        MaterialButton buttonSubmit = dialogView.findViewById(R.id.buttonSubmitAddStudent);
-        MaterialButton buttonCancel = dialogView.findViewById(R.id.buttonCancelAddStudent);
+        textRecordsCount.setText(getString(R.string.records_count_format, state.total));
 
-        buttonCancel.setOnClickListener(v -> dialog.dismiss());
+        if (state.errorMessage != null) {
+            textRosterError.setText(state.errorMessage);
+            textRosterError.setVisibility(View.VISIBLE);
+            textRosterEmpty.setVisibility(View.GONE);
+            recyclerStudents.setVisibility(View.GONE);
+            return;
+        }
+        textRosterError.setVisibility(View.GONE);
 
-        buttonSubmit.setOnClickListener(v -> {
-            String name = editName.getText() != null ? editName.getText().toString().trim() : "";
-            String number = editNumber.getText() != null ? editNumber.getText().toString().trim() : "";
-            String programme = getSelectedProgramme(chipProgrammeChoice);
-            String group = getSelectedGroup(chipGroupChoice);
+        List<com.example.student_registration.model.Student> students = state.students;
+        boolean empty = !state.loading && (students == null || students.isEmpty());
+        textRosterEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
+        recyclerStudents.setVisibility(empty ? View.GONE : View.VISIBLE);
 
-            if (name.isEmpty() || number.isEmpty()) {
-                textError.setText("Please enter both full name and student number.");
-                textError.setVisibility(View.VISIBLE);
-                return;
-            }
+        adapter.submitList(students);
+    }
 
-            progress.setVisibility(View.VISIBLE);
-            textError.setVisibility(View.GONE);
-            buttonSubmit.setEnabled(false);
+    private void renderGroupChips(List<GroupOccupancy> groups) {
+        fullGroupCodes = new HashSet<>();
+        for (GroupOccupancy g : groups) {
+            if (g.isFull()) fullGroupCodes.add(g.getGroup());
+            setChipLabel(g.getGroup(), g.getOccupied(), g.getCapacity());
+        }
+    }
 
-            studentRepository.createStudent(name, number, programme, group, new StudentRepository.CreateCallback() {
-                @Override
-                public void onSuccess(Student student) {
-                    dialog.dismiss();
-                    Toast.makeText(StudentRosterActivity.this, "Student added successfully", Toast.LENGTH_SHORT).show();
-                    viewModel.refresh();
-                }
+    private void setChipLabel(String code, int occupied, int capacity) {
+        Chip chip = findChipForGroup(code);
+        if (chip != null) chip.setText(code + " · " + occupied + "/" + capacity);
+    }
 
-                @Override
-                public void onApiError(ApiErrorBody error) {
-                    progress.setVisibility(View.GONE);
-                    buttonSubmit.setEnabled(true);
-                    textError.setText(error.getMessage());
-                    textError.setVisibility(View.VISIBLE);
-                }
+    private Chip findChipForGroup(String code) {
+        switch (code) {
+            case "G01": return findViewById(R.id.chipG01);
+            case "G02": return findViewById(R.id.chipG02);
+            case "G03": return findViewById(R.id.chipG03);
+            case "G04": return findViewById(R.id.chipG04);
+            default: return null;
+        }
+    }
 
-                @Override
-                public void onNetworkError(String message) {
-                    progress.setVisibility(View.GONE);
-                    buttonSubmit.setEnabled(true);
-                    textError.setText("Network error. Please try again.");
-                    textError.setVisibility(View.VISIBLE);
-                }
-            });
+    private String programmeForChip(int chipId) {
+        if (chipId == R.id.chipCs) return "CS";
+        if (chipId == R.id.chipIt) return "IT";
+        if (chipId == R.id.chipDs) return "DS";
+        return RosterViewModel.ALL_PROGRAMMES;
+    }
+
+    private String groupForChip(int chipId) {
+        if (chipId == R.id.chipG01) return "G01";
+        if (chipId == R.id.chipG02) return "G02";
+        if (chipId == R.id.chipG03) return "G03";
+        if (chipId == R.id.chipG04) return "G04";
+        return RosterViewModel.ALL_GROUPS;
+    }
+
+    private void openAddStudentDialog() {
+        AddStudentDialogFragment dialog = new AddStudentDialogFragment();
+        dialog.setOnStudentAddedListener(student -> {
+            viewModel.refresh();
+            viewModel.loadGroupChipCounts();
         });
-
-        dialog.show();
+        dialog.show(getSupportFragmentManager(), "add_student");
     }
 
-    private String getSelectedProgramme(ChipGroup chipGroup) {
-        int id = chipGroup.getCheckedChipId();
-        if (id == R.id.chipChooseCs) return "CS";
-        if (id == R.id.chipChooseIt) return "IT";
-        if (id == R.id.chipChooseDs) return "DS";
-        return "CS";
-    }
-
-    private String getSelectedGroup(ChipGroup chipGroup) {
-        int id = chipGroup.getCheckedChipId();
-        if (id == R.id.chipChooseG01) return "G01";
-        if (id == R.id.chipChooseG02) return "G02";
-        if (id == R.id.chipChooseG03) return "G03";
-        if (id == R.id.chipChooseG04) return "G04";
-        return "G01";
+    private void signOut() {
+        new AuthRepository(this).logout();
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

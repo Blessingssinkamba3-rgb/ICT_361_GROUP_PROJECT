@@ -3,48 +3,45 @@ package com.example.student_registration;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.student_registration.model.LoginResponse;
 import com.example.student_registration.session.SessionManager;
 import com.example.student_registration.viewmodel.LoginViewModel;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 
 public class LoginActivity extends AppCompatActivity {
 
     private LoginViewModel viewModel;
-    private SessionManager sessionManager;
-
-    private EditText editLoginKey;
-    private EditText editPassword;
+    private TextInputEditText editLoginKey;
+    private TextInputEditText editPassword;
     private MaterialButton buttonSignIn;
-    private ProgressBar progressLogin;
+    private View progressLogin;
     private TextView textLoginError;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        sessionManager = new SessionManager(this);
-        if (sessionManager.isLoggedIn()) {
-            navigateToHome();
+        SessionManager session = new SessionManager(this);
+        if (session.isLoggedIn()) {
+            routeToHome(session.isLecturer());
+            finish();
             return;
         }
 
         setContentView(R.layout.activity_login);
-
-        viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
         editLoginKey = findViewById(R.id.editLoginKey);
         editPassword = findViewById(R.id.editPassword);
         buttonSignIn = findViewById(R.id.buttonSignIn);
         progressLogin = findViewById(R.id.progressLogin);
         textLoginError = findViewById(R.id.textLoginError);
+
+        viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
         buttonSignIn.setOnClickListener(v -> {
             String loginKey = editLoginKey.getText() != null ? editLoginKey.getText().toString() : "";
@@ -53,37 +50,27 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         viewModel.getUiState().observe(this, state -> {
-            if (state == null) return;
+            progressLogin.setVisibility(state.loading ? View.VISIBLE : View.GONE);
+            buttonSignIn.setEnabled(!state.loading);
 
-            if (state.loading) {
-                progressLogin.setVisibility(View.VISIBLE);
-                textLoginError.setVisibility(View.GONE);
-                buttonSignIn.setEnabled(false);
-            } else if (state.errorMessage != null) {
-                progressLogin.setVisibility(View.GONE);
+            if (state.errorMessage != null) {
                 textLoginError.setText(state.errorMessage);
                 textLoginError.setVisibility(View.VISIBLE);
-                buttonSignIn.setEnabled(true);
-            } else if (state.success != null) {
-                progressLogin.setVisibility(View.GONE);
-                buttonSignIn.setEnabled(true);
-                navigateToHome();
             } else {
-                progressLogin.setVisibility(View.GONE);
                 textLoginError.setVisibility(View.GONE);
-                buttonSignIn.setEnabled(true);
+            }
+
+            if (state.success != null) {
+                routeToHome("lecturer".equals(state.success.getRole()));
+                finish();
             }
         });
     }
 
-    private void navigateToHome() {
-        Intent intent;
-        if (sessionManager.isLecturer()) {
-            intent = new Intent(this, LecturerHomeActivity.class);
-        } else {
-            intent = new Intent(this, StudentHomeActivity.class);
-        }
+    private void routeToHome(boolean isLecturer) {
+        Intent intent = new Intent(this,
+                isLecturer ? LecturerHomeActivity.class : StudentHomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        finish();
     }
 }

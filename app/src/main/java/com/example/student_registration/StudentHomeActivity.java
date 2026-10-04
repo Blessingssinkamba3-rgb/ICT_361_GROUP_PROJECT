@@ -12,34 +12,20 @@ import com.example.student_registration.session.SessionManager;
 
 public class StudentHomeActivity extends AppCompatActivity {
 
-    private AuthRepository authRepository;
-    private SessionManager sessionManager;
-
-    private TextView textWelcome;
-    private ImageButton buttonSignOut;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_student_home);
 
-        authRepository = new AuthRepository(this);
-        sessionManager = new SessionManager(this);
+        SessionManager session = new SessionManager(this);
+        TextView textWelcome = findViewById(R.id.textWelcome);
+        textWelcome.setText(getString(R.string.welcome_back_format, session.getDisplayName()));
 
-        textWelcome = findViewById(R.id.textWelcome);
-        buttonSignOut = findViewById(R.id.buttonSignOut);
-
-        String name = sessionManager.getDisplayName();
-        if (name != null && !name.trim().isEmpty()) {
-            textWelcome.setText("Welcome back, " + name);
-        } else {
-            textWelcome.setText("Welcome back");
-        }
-
+        ImageButton buttonSignOut = findViewById(R.id.buttonSignOut);
         buttonSignOut.setOnClickListener(v -> {
-            authRepository.logout();
-            Intent intent = new Intent(StudentHomeActivity.this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            new AuthRepository(this).logout();
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
         });
