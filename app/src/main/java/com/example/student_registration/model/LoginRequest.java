@@ -1,4 +1,3 @@
-// LoginRequest.java
 package com.example.student_registration.model;
 
 import com.google.gson.annotations.SerializedName;

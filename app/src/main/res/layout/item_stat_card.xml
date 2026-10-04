@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:layout_weight="1"
     android:layout_margin="4dp"
-    android:background="@drawable/bg_stat_card_top_border"
+    android:background="@drawable/bg_stat_card_border"
     android:gravity="center"
     android:orientation="vertical"
     android:paddingVertical="16dp">
